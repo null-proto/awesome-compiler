@@ -1,7 +1,9 @@
 .PHONY:  setup compile run
 
 CC = gcc
-FILE = memexec
+SRC = src/*
+INCLUDE = include/
+OF = diy-compiler
 
 
 default: setup compile run
@@ -10,10 +12,10 @@ setup:
 	@mkdir -p build/bin
 
 compile: src/
-	$(CC) -o build/bin/$(FILE) src/$(FILE).c
+	$(CC) -I$(INCLUDE) -o build/bin/$(OF) src/*.c
 
 run:
 	@echo running
-	@build/bin/$(FILE)
-	@printf "\nreturn $?"
+	@build/bin/$(OF)
+	@printf "\nreturn ${$status}"
 
