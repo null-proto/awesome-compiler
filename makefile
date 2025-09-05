@@ -1,7 +1,7 @@
 .PHONY:  setup compile run
 
-CC = gcc
-SRC = src/*
+CC = g++
+SRC = src/*.cxx
 INCLUDE = include/
 OF = diy-compiler
 
@@ -11,8 +11,8 @@ default: setup compile run
 setup:
 	@mkdir -p build/bin
 
-compile: src/
-	$(CC) -I$(INCLUDE) -o build/bin/$(OF) src/*.c
+compile: $(SRC)
+	$(CC) -I$(INCLUDE) -o build/bin/$(OF) $(SRC)
 
 run:
 	@echo running
