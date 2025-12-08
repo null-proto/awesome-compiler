@@ -122,6 +122,6 @@ int main() {
   struct token *tokens = parse(data, strlen(data));
   print(tokens);
 
-  free(tokens);
+  free_tokens(tokens);
   return 0;
 }
