@@ -10,7 +10,7 @@ project(compilers)
 
 add_executable(parser1)
 
-# target_link_libraries(dm PRIVATE ${PAM_LIB} ${PAM_MISC_LIB})
+# target_link_libraries(parser1 PRIVATE include/*.h)
 
 target_sources(parser1 PRIVATE parsers/simple1.c)
 
