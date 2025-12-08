@@ -35,7 +35,7 @@ struct token *parse(char *str, size_t len) {
     switch (str[i]) {
     case ':': {
       tokens->next = calloc(1, sizeof(struct token));
-				tokens->next->pre = tokens;
+      tokens->next->pre = tokens;
       tokens = tokens->next;
 
       tokens->data = &str[i];
@@ -46,7 +46,7 @@ struct token *parse(char *str, size_t len) {
     case ' ': {
       if (tokens->type != SEPARATOR) {
         tokens->next = calloc(1, sizeof(struct token));
-				tokens->next->pre = tokens;
+        tokens->next->pre = tokens;
         tokens = tokens->next;
 
         tokens->data = &str[i];
@@ -58,12 +58,12 @@ struct token *parse(char *str, size_t len) {
     default:
       if (!tokens) {
         tokens = calloc(1, sizeof(struct token));
-				tokens->type = STRING;
+        tokens->type = STRING;
         goto fill;
       }
       if (tokens->type != STRING) {
         tokens->next = calloc(1, sizeof(struct token));
-				tokens->next->pre = tokens;
+        tokens->next->pre = tokens;
         tokens = tokens->next;
       fill:
         tokens->data = &str[i];
@@ -75,29 +75,29 @@ struct token *parse(char *str, size_t len) {
       break;
     }
   }
-	for (;tokens->pre;tokens = tokens->pre){};
+  for (; tokens->pre; tokens = tokens->pre);
   return tokens;
 }
 
 void print(struct token *tk) {
-	for (;tk->pre;tk = tk->pre){};
   for (struct token *i = tk; i; i = i->next) {
-    // printf("TOK { \n type: %d\n len: %ld\n data: %p\n next: %p\n}\n", i->type,
+    // printf("TOK { \n type: %d\n len: %ld\n data: %p\n next: %p\n}\n",
+    // i->type,
     //        i->len, i->data, i->next);
     switch (i->type) {
     case STRING: {
       write(STDOUT_FILENO, (char *)(i->data), i->len);
-			fflush(stdout);
+      fflush(stdout);
       break;
     }
     case SPLIT: {
       printf(" -> ");
-			fflush(stdout);
+      fflush(stdout);
       break;
     }
     case SEPARATOR: {
       printf("\n");
-			fflush(stdout);
+      fflush(stdout);
       break;
     }
     default: {
@@ -108,7 +108,7 @@ void print(struct token *tk) {
 }
 
 void free_tokens(struct token *tk) {
-	for (;tk->pre;tk = tk->pre){};
+  for (; tk->pre; tk = tk->pre);
   for (struct token *i = tk; i; i = tk) {
     tk = tk->next;
     free(i);
