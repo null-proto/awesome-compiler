@@ -2,15 +2,15 @@ cmake_minimum_required(VERSION 3.23)
 
 project(compilers)
 
-# file(GLOB SRC_C *.c)
-# file(GLOB SRC_H *.h)
-#
-# find_library(PAM_LIB pam)
+file(GLOB INCLUDE_C include/*.c)
+file(GLOB INCLUDE_H include/*.h)
+
+# find_library(FMT_LIB fmt)
 # find_library(PAM_MISC_LIB pam_misc)
 
 add_executable(parser1)
 
-# target_link_libraries(parser1 PRIVATE include/*.h)
+# target_link_libraries(parser1 PRIVATE ${FMT})
 
 target_sources(parser1 PRIVATE parsers/simple1.c)
 

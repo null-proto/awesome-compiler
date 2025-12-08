@@ -17,27 +17,27 @@
 
 #define NULLPRT (void *)0
 
-typedef enum { STRING, SEPARATOR, SPLIT } token_t;
+typedef enum { STRING = 1, SEPARATOR, SPLIT } token_t;
 
 struct token {
   char *data;
   size_t len;
   token_t type;
   struct token *next;
+  struct token *pre;
 };
 
 struct token *parse(char *str, size_t len) {
-  struct token *tokens = malloc(sizeof(struct token));
-
-  struct token *list = tokens;
+  struct token *tokens = NULL;
 
   for (size_t i = 0; i < len; i++) {
 
     switch (str[i]) {
     case ':': {
-      struct token *new = malloc(sizeof(struct token));
-      tokens->next = new;
-      tokens = new;
+      tokens->next = calloc(1, sizeof(struct token));
+				tokens->next->pre = tokens;
+      tokens = tokens->next;
+
       tokens->data = &str[i];
       tokens->type = SPLIT;
       tokens->len = 1;
@@ -45,9 +45,10 @@ struct token *parse(char *str, size_t len) {
     }
     case ' ': {
       if (tokens->type != SEPARATOR) {
-        struct token *new = malloc(sizeof(struct token));
-        tokens->next = new;
-        tokens = new;
+        tokens->next = calloc(1, sizeof(struct token));
+				tokens->next->pre = tokens;
+        tokens = tokens->next;
+
         tokens->data = &str[i];
         tokens->type = SEPARATOR;
         tokens->len = 1;
@@ -55,7 +56,16 @@ struct token *parse(char *str, size_t len) {
       break;
     }
     default:
-      if (tokens->data == NULLPRT) {
+      if (!tokens) {
+        tokens = calloc(1, sizeof(struct token));
+				tokens->type = STRING;
+        goto fill;
+      }
+      if (tokens->type != STRING) {
+        tokens->next = calloc(1, sizeof(struct token));
+				tokens->next->pre = tokens;
+        tokens = tokens->next;
+      fill:
         tokens->data = &str[i];
         tokens->type = STRING;
         tokens->len = 1;
@@ -65,19 +75,42 @@ struct token *parse(char *str, size_t len) {
       break;
     }
   }
-  return list;
+	for (;tokens->pre;tokens = tokens->pre){};
+  return tokens;
 }
 
 void print(struct token *tk) {
+	for (;tk->pre;tk = tk->pre){};
   for (struct token *i = tk; i; i = i->next) {
-    write(STDOUT_FILENO,(char*)(i->data), i->len);
-    printf(" ");
+    // printf("TOK { \n type: %d\n len: %ld\n data: %p\n next: %p\n}\n", i->type,
+    //        i->len, i->data, i->next);
+    switch (i->type) {
+    case STRING: {
+      write(STDOUT_FILENO, (char *)(i->data), i->len);
+			fflush(stdout);
+      break;
+    }
+    case SPLIT: {
+      printf(" -> ");
+			fflush(stdout);
+      break;
+    }
+    case SEPARATOR: {
+      printf("\n");
+			fflush(stdout);
+      break;
+    }
+    default: {
+      break;
+    }
+    }
   }
 }
 
 void free_tokens(struct token *tk) {
+	for (;tk->pre;tk = tk->pre){};
   for (struct token *i = tk; i; i = tk) {
-		tk = tk->next;
+    tk = tk->next;
     free(i);
   }
 }
@@ -87,9 +120,8 @@ int main() {
   printf("input: '%s'\n", data);
 
   struct token *tokens = parse(data, strlen(data));
-
   print(tokens);
-	free(tokens);
 
+  free(tokens);
   return 0;
 }
