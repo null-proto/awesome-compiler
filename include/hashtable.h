@@ -3,7 +3,8 @@
 #include <stddef.h>
 
 typedef struct {
-	char** kstore;
+	void** kstore;
+	void** vstore;
 	size_t cappacity;
 } hash_table;
 
