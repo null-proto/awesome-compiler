@@ -34,7 +34,10 @@
 /// O_CLOSE      ::=  `}`
 /// COMMA      ::=  `,`
 
+#include "stdio.h"
+#include "unistd.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,6 +46,7 @@ typedef enum {
   OBJECT_CLOSE,
   LIST_OPEN,
   LIST_CLOSE,
+	SPLIT,
   STRING,
   NUMBER,
   BOOLEAN_TRUE,
@@ -51,46 +55,48 @@ typedef enum {
   UNK,
 } type_t;
 
-typedef struct token {
+struct token_h {
   type_t type;
   char *d;
   size_t len;
-  struct token *n;
-  struct token *p;
-} token;
+  struct token_h *n;
+  struct token_h *p;
+};
+typedef struct token_h token;
 
-void add_token(token *t, type_t type, char *data, size_t l) {
-  if (t == NULL) {
-    t = malloc(sizeof(token));
-    t->type = type;
-    t->len = l;
-    t->n = NULL;
-		t->p = NULL;
-    t->d = data;
-  } else {
-    token *new = malloc(sizeof(token));
+static unsigned a=0;
+
+inline void token_add(token **t, type_t type, char *data, size_t l) {
+  if (*t == NULL) {
+    token* new = calloc(1,sizeof(token));
     new->type = type;
     new->len = l;
-    new->n = NULL;
-		new->p = t;
     new->d = data;
-    t->n = new;
-    t = new;
+		*t = new;
+  } else {
+
+    token *new = calloc(1,sizeof(token));
+    new->type = type;
+    new->len = l;
+    new->d = data;
+    new->p = *t;
+    (*t)->n = new;
+    *t = new;
   }
+
+	printf("CALL%d: d:%p n:%p p:%p type:%d len:%ld\n", a , (*t)->d,(*t)->n,(*t)->p , (*t)->type, (*t)->len);
 }
 
-token *parse(char *stream) {
+token *token_parse(char *stream) {
   token *tk = NULL;
-  token *f = tk;
 
   struct {
     unsigned quotes : 1;
     unsigned group : 1;
-  } flags;
+  } flags = {0, 0};
 
-  for (; stream; stream++) {
-
-    if (flags.quotes && tk->type == STRING) {
+  for (; *stream; stream++) {
+    if (tk && flags.quotes && tk->type == STRING) {
       tk->len++;
       if (*stream == '"')
         flags.quotes = !flags.quotes;
@@ -98,65 +104,134 @@ token *parse(char *stream) {
     }
 
     switch (*stream) {
-    case ' ' | '\n': {
-      flags.group = !flags.group;
-    }
-
     case '"': {
       flags.quotes = !flags.quotes;
-      add_token(tk, STRING, stream, 1);
+      token_add(&tk, STRING, stream, 1);
       break;
     }
 
+    case ' ':
+    case '\n':
+    case '\t': {
+      if (flags.group) flags.group = !flags.group;
+			break;
+    }
+
     case ',': {
-      add_token(tk, COMMA, stream, 1);
+      token_add(&tk, COMMA, stream, 1);
+      if (flags.group) flags.group = !flags.group;
+      break;
+    }
+
+		case ':': {
+      token_add(&tk, SPLIT, stream, 1);
+      if (flags.group) flags.group = !flags.group;
       break;
     }
 
     case '{': {
-      add_token(tk, OBJECT_OPEN, stream, 1);
+      token_add(&tk, OBJECT_OPEN, stream, 1);
       break;
     }
 
     case '}': {
-      add_token(tk, OBJECT_CLOSE, stream, 1);
+      token_add(&tk, OBJECT_CLOSE, stream, 1);
+      if (flags.group) flags.group = !flags.group;
+      break;
+    }
+
+    case '[': {
+      token_add(&tk, LIST_OPEN, stream, 1);
+      break;
+    }
+
+    case ']': {
+      token_add(&tk, LIST_CLOSE, stream, 1);
+      if (flags.group) flags.group = !flags.group;
       break;
     }
 
     default: {
       if (!flags.group) {
         if (*stream == 't' && strncmp(stream, "true", 4)) {
-          add_token(tk, BOOLEAN_TRUE, stream, 4);
+          token_add(&tk, BOOLEAN_TRUE, stream, 4);
           stream += 3;
         }
 
         else if (*stream == 'f' && strncmp(stream, "false", 5)) {
-          add_token(tk, BOOLEAN_FALSE, stream, 5);
+          token_add(&tk, BOOLEAN_FALSE, stream, 5);
           stream += 4;
         }
 
         else if (*stream <= '9' && *stream >= '0') {
           flags.group = 1;
-          add_token(tk, NUMBER, stream, 1);
+          token_add(&tk, NUMBER, stream, 1);
 
-        } else if (tk->type == UNK) {
+        } else if (tk && tk->type == UNK) {
           tk->len++;
 
         } else {
-          add_token(tk, UNK, stream, 1);
+          token_add(&tk, UNK, stream, 1);
         }
       } else {
         // group = true
-        if (*stream <= '9' && *stream >= '0') {
+        if (tk && *stream <= '9' && *stream >= '0') {
           tk->len++;
         } else {
-          add_token(tk, UNK, stream, 1);
+          token_add(&tk, UNK, stream, 1);
         }
       }
     }
     }
   }
-  return f;
+  for (; tk->p; tk = tk->p) ;
+  return tk;
 };
 
-int main(int argc, char **argv) {}
+void token_print(token *tk) {
+	printf(" ==== ");
+  for (; tk; tk = tk->n) {
+    write(STDOUT_FILENO,(char*) tk->d, tk->len);
+    printf(" ");
+  }
+	fflush(stdout);
+}
+
+void token_free(token *tk) {
+  for (token *piv = tk; piv; piv = tk->n, tk = tk->n)
+    free(piv);
+}
+
+char *read_file(char *path) {
+  FILE *f = fopen(path, "rb");
+  fseek(f, 0, SEEK_END);
+  size_t len = ftell(f);
+  rewind(f);
+  char *str = malloc(len * sizeof(char) + sizeof(char));
+  fread(str, 1, len, f);
+  str[len] = '\0';
+  fclose(f);
+  return str;
+}
+
+int main(int argc, char **argv) {
+
+  if (argc > 2) {
+    printf("Usage:\n");
+    printf("%s  [json-file]", *argv);
+    return 1;
+  }
+
+  if (access(*(++argv), F_OK)) {
+    fprintf(stdout, "no such files or no directory\n");
+    return 1;
+  }
+
+  printf("reading file: %s\n", *argv);
+  char *json = read_file(*argv);
+  token* tk = token_parse(json);
+  token_print(tk);
+  token_free(tk);
+  free(json);
+  return 0;
+}

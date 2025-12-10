@@ -9,13 +9,18 @@ file(GLOB INCLUDE_H include/*.h)
 # find_library(PAM_MISC_LIB pam_misc)
 
 add_executable(parser1)
+add_executable(parser2)
 
 # target_link_libraries(parser1 PRIVATE ${FMT})
 
 target_sources(parser1 PRIVATE parsers/simple1.c)
+target_sources(parser2 PRIVATE parsers/simple2.c)
 
 target_compile_options(parser1 PRIVATE -fsanitize=address -g)
 target_link_options(parser1 PRIVATE -fsanitize=address)
+
+target_compile_options(parser2 PRIVATE -fsanitize=address -g)
+target_link_options(parser2 PRIVATE -fsanitize=address)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

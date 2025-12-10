@@ -1,0 +1,11 @@
+{
+	"key":"value",
+	"number" : 123,
+	"false" : false,
+	"true" : true,
+
+	"obj" : {
+		"key" : "value"
+	}
+
+}
