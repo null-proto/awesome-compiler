@@ -46,7 +46,7 @@ typedef enum {
   OBJECT_CLOSE,
   LIST_OPEN,
   LIST_CLOSE,
-	SPLIT,
+  SPLIT,
   STRING,
   NUMBER,
   BOOLEAN_TRUE,
@@ -64,18 +64,16 @@ struct token_h {
 };
 typedef struct token_h token;
 
-static unsigned a=0;
-
-inline void token_add(token **t, type_t type, char *data, size_t l) {
+void token_add(token **t, type_t type, char *data, size_t l) {
   if (*t == NULL) {
-    token* new = calloc(1,sizeof(token));
+    token *new = calloc(1, sizeof(token));
     new->type = type;
     new->len = l;
     new->d = data;
-		*t = new;
+    *t = new;
   } else {
 
-    token *new = calloc(1,sizeof(token));
+    token *new = calloc(1, sizeof(token));
     new->type = type;
     new->len = l;
     new->d = data;
@@ -83,8 +81,6 @@ inline void token_add(token **t, type_t type, char *data, size_t l) {
     (*t)->n = new;
     *t = new;
   }
-
-	printf("CALL%d: d:%p n:%p p:%p type:%d len:%ld\n", a , (*t)->d,(*t)->n,(*t)->p , (*t)->type, (*t)->len);
 }
 
 token *token_parse(char *stream) {
@@ -113,19 +109,22 @@ token *token_parse(char *stream) {
     case ' ':
     case '\n':
     case '\t': {
-      if (flags.group) flags.group = !flags.group;
-			break;
+      if (flags.group)
+        flags.group = !flags.group;
+      break;
     }
 
     case ',': {
       token_add(&tk, COMMA, stream, 1);
-      if (flags.group) flags.group = !flags.group;
+      if (flags.group)
+        flags.group = !flags.group;
       break;
     }
 
-		case ':': {
+    case ':': {
       token_add(&tk, SPLIT, stream, 1);
-      if (flags.group) flags.group = !flags.group;
+      if (flags.group)
+        flags.group = !flags.group;
       break;
     }
 
@@ -136,7 +135,8 @@ token *token_parse(char *stream) {
 
     case '}': {
       token_add(&tk, OBJECT_CLOSE, stream, 1);
-      if (flags.group) flags.group = !flags.group;
+      if (flags.group)
+        flags.group = !flags.group;
       break;
     }
 
@@ -147,7 +147,8 @@ token *token_parse(char *stream) {
 
     case ']': {
       token_add(&tk, LIST_CLOSE, stream, 1);
-      if (flags.group) flags.group = !flags.group;
+      if (flags.group)
+        flags.group = !flags.group;
       break;
     }
 
@@ -184,22 +185,25 @@ token *token_parse(char *stream) {
     }
     }
   }
-  for (; tk->p; tk = tk->p) ;
+  for (; tk->p; tk = tk->p)
+    ;
   return tk;
 };
 
 void token_print(token *tk) {
-	printf(" ==== ");
+	const char* e = " ";
   for (; tk; tk = tk->n) {
-    write(STDOUT_FILENO,(char*) tk->d, tk->len);
-    printf(" ");
+    write(STDOUT_FILENO, tk->d, tk->len);
+    write(STDOUT_FILENO, e, 1);
   }
-	fflush(stdout);
+  fflush(stdout);
 }
 
 void token_free(token *tk) {
-  for (token *piv = tk; piv; piv = tk->n, tk = tk->n)
+  for (token *piv = tk; piv ; piv = tk) {
+		tk = tk->n;
     free(piv);
+	}
 }
 
 char *read_file(char *path) {
@@ -229,7 +233,7 @@ int main(int argc, char **argv) {
 
   printf("reading file: %s\n", *argv);
   char *json = read_file(*argv);
-  token* tk = token_parse(json);
+  token *tk = token_parse(json);
   token_print(tk);
   token_free(tk);
   free(json);
