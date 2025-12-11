@@ -5,6 +5,10 @@ project(compilers)
 file(GLOB INCLUDE_C include/*.c)
 file(GLOB INCLUDE_H include/*.h)
 
+
+file(GLOB PARSER2_C parsers/simple2/*.c)
+file(GLOB PARSER2_H parsers/simple2/*.h)
+
 # find_library(FMT_LIB fmt)
 # find_library(PAM_MISC_LIB pam_misc)
 
@@ -14,7 +18,7 @@ add_executable(parser2)
 # target_link_libraries(parser1 PRIVATE ${FMT})
 
 target_sources(parser1 PRIVATE parsers/simple1.c)
-target_sources(parser2 PRIVATE parsers/simple2.c)
+target_sources(parser2 PRIVATE ${PARSER2_C} ${PARSER2_H})
 
 target_compile_options(parser1 PRIVATE -fsanitize=address -g)
 target_link_options(parser1 PRIVATE -fsanitize=address)
