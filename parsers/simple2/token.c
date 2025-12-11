@@ -151,14 +151,3 @@ void token_free(token *tk) {
 	}
 }
 
-char *read_file(char *path) {
-  FILE *f = fopen(path, "rb");
-  fseek(f, 0, SEEK_END);
-  size_t len = ftell(f);
-  rewind(f);
-  char *str = malloc(len * sizeof(char) + sizeof(char));
-  fread(str, 1, len, f);
-  str[len] = '\0';
-  fclose(f);
-  return str;
-}
