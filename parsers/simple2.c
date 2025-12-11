@@ -24,7 +24,10 @@
 /// STRING     ::=  QUOTES + CHARACTERS + QUOTES
 ///
 /// CHARACTERS ::=  `type CStr` ie. `struct { char* data; size_t len; }`
-/// NUMBER     ::=  32bit signed integer
+/// NUMBER     ::=  INT | FLOAT
+///
+/// INT        ::=  '0' to '9' + [INT]
+/// FLOAT      ::=  INT + '.' + INT
 ///
 /// BOOLEAN    ::=  `true` | `false`
 /// LIST_OPEN  ::=  `[`
@@ -49,6 +52,7 @@ typedef enum {
   SPLIT,
   STRING,
   NUMBER,
+	NUMBER_FLOAT,
   BOOLEAN_TRUE,
   BOOLEAN_FALSE,
   COMMA,
@@ -176,7 +180,10 @@ token *token_parse(char *stream) {
         }
       } else {
         // group = true
-        if (tk && *stream <= '9' && *stream >= '0') {
+        if (*stream <= '9' && *stream >= '0') {
+          tk->len++;
+				} else if (*stream == '.' && stream+1 && *(stream+1) <= '9' && *(stream+1) >= '0') {
+					tk->type = NUMBER_FLOAT;
           tk->len++;
         } else {
           token_add(&tk, UNK, stream, 1);
