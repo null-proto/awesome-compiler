@@ -7,18 +7,18 @@
 #include <string.h>
 
 typedef enum {
-  OBJECT_OPEN = 1,
-  OBJECT_CLOSE,
-  LIST_OPEN,
-  LIST_CLOSE,
-  SPLIT,
-  STRING,
-  NUMBER,
-	NUMBER_FLOAT,
-  BOOLEAN_TRUE,
-  BOOLEAN_FALSE,
-  COMMA,
-  UNK,
+  T_OBJECT_OPEN = 1,
+  T_OBJECT_CLOSE,
+  T_LIST_OPEN,
+  T_LIST_CLOSE,
+  T_SPLIT,
+  T_STRING,
+  T_NUMBER,
+	T_NUMBER_FLOAT,
+  T_BOOLEAN_TRUE,
+  T_BOOLEAN_FALSE,
+  T_COMMA,
+  T_UNK,
 } token_t;
 
 struct token_ {

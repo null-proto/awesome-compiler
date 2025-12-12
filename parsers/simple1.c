@@ -17,7 +17,7 @@
 
 #define NULLPRT (void *)0
 
-typedef enum { STRING = 1, SEPARATOR, SPLIT } token_t;
+typedef enum { T_STRING = 1, SEPARATOR, T_SPLIT } token_t;
 
 struct token {
   char *data;
@@ -39,7 +39,7 @@ struct token *parse(char *str, size_t len) {
       tokens = tokens->next;
 
       tokens->data = &str[i];
-      tokens->type = SPLIT;
+      tokens->type = T_SPLIT;
       tokens->len = 1;
       break;
     }
@@ -58,16 +58,16 @@ struct token *parse(char *str, size_t len) {
     default:
       if (!tokens) {
         tokens = calloc(1, sizeof(struct token));
-        tokens->type = STRING;
+        tokens->type = T_STRING;
         goto fill;
       }
-      if (tokens->type != STRING) {
+      if (tokens->type != T_STRING) {
         tokens->next = calloc(1, sizeof(struct token));
         tokens->next->pre = tokens;
         tokens = tokens->next;
       fill:
         tokens->data = &str[i];
-        tokens->type = STRING;
+        tokens->type = T_STRING;
         tokens->len = 1;
       } else {
         (tokens->len)++;
@@ -85,12 +85,12 @@ void print(struct token *tk) {
     // i->type,
     //        i->len, i->data, i->next);
     switch (i->type) {
-    case STRING: {
+    case T_STRING: {
       write(STDOUT_FILENO, (char *)(i->data), i->len);
       fflush(stdout);
       break;
     }
-    case SPLIT: {
+    case T_SPLIT: {
       printf(" -> ");
       fflush(stdout);
       break;

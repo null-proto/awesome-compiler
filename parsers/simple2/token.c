@@ -34,7 +34,7 @@ token *token_parse(char *stream) {
   } flags = {0, 0};
 
   for (; *stream; stream++) {
-    if (tk && flags.quotes && tk->type == STRING) {
+    if (tk && flags.quotes && tk->type == T_STRING) {
       tk->len++;
       if (*stream == '"')
         flags.quotes = !flags.quotes;
@@ -44,7 +44,7 @@ token *token_parse(char *stream) {
     switch (*stream) {
     case '"': {
       flags.quotes = !flags.quotes;
-      token_add(&tk, STRING, stream, 1);
+      token_add(&tk, T_STRING, stream, 1);
       break;
     }
 
@@ -57,38 +57,38 @@ token *token_parse(char *stream) {
     }
 
     case ',': {
-      token_add(&tk, COMMA, stream, 1);
+      token_add(&tk, T_COMMA, stream, 1);
       if (flags.group)
         flags.group = !flags.group;
       break;
     }
 
     case ':': {
-      token_add(&tk, SPLIT, stream, 1);
+      token_add(&tk, T_SPLIT, stream, 1);
       if (flags.group)
         flags.group = !flags.group;
       break;
     }
 
     case '{': {
-      token_add(&tk, OBJECT_OPEN, stream, 1);
+      token_add(&tk, T_OBJECT_OPEN, stream, 1);
       break;
     }
 
     case '}': {
-      token_add(&tk, OBJECT_CLOSE, stream, 1);
+      token_add(&tk, T_OBJECT_CLOSE, stream, 1);
       if (flags.group)
         flags.group = !flags.group;
       break;
     }
 
     case '[': {
-      token_add(&tk, LIST_OPEN, stream, 1);
+      token_add(&tk, T_LIST_OPEN, stream, 1);
       break;
     }
 
     case ']': {
-      token_add(&tk, LIST_CLOSE, stream, 1);
+      token_add(&tk, T_LIST_CLOSE, stream, 1);
       if (flags.group)
         flags.group = !flags.group;
       break;
@@ -97,34 +97,34 @@ token *token_parse(char *stream) {
     default: {
       if (!flags.group) {
         if (*stream == 't' && strncmp(stream, "true", 4)) {
-          token_add(&tk, BOOLEAN_TRUE, stream, 4);
+          token_add(&tk, T_BOOLEAN_TRUE, stream, 4);
           stream += 3;
         }
 
         else if (*stream == 'f' && strncmp(stream, "false", 5)) {
-          token_add(&tk, BOOLEAN_FALSE, stream, 5);
+          token_add(&tk, T_BOOLEAN_FALSE, stream, 5);
           stream += 4;
         }
 
         else if (*stream <= '9' && *stream >= '0') {
           flags.group = 1;
-          token_add(&tk, NUMBER, stream, 1);
+          token_add(&tk, T_NUMBER, stream, 1);
 
-        } else if (tk && tk->type == UNK) {
+        } else if (tk && tk->type == T_UNK) {
           tk->len++;
 
         } else {
-          token_add(&tk, UNK, stream, 1);
+          token_add(&tk, T_UNK, stream, 1);
         }
       } else {
         // group = true
         if (*stream <= '9' && *stream >= '0') {
           tk->len++;
 				} else if (*stream == '.' && stream+1 && *(stream+1) <= '9' && *(stream+1) >= '0') {
-					tk->type = NUMBER_FLOAT;
+					tk->type = T_NUMBER_FLOAT;
           tk->len++;
         } else {
-          token_add(&tk, UNK, stream, 1);
+          token_add(&tk, T_UNK, stream, 1);
         }
       }
     }

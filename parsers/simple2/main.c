@@ -58,9 +58,6 @@ int main(int argc, char **argv) {
 
   printf("reading file: %s\n", *argv);
   char *json = read_file(*argv);
-  token *tk = token_parse(json);
-  token_print(tk);
-  token_free(tk);
   free(json);
   return 0;
 }
@@ -77,3 +74,29 @@ char *read_file(char *path) {
   fclose(f);
   return str;
 }
+
+void die(const char *reason, char* pos, char *file) {
+	// h & v pos
+	long unsigned line = 0;
+	char* i = 0;
+	for (; file < pos; file++) {
+		if (*file == '\n') {
+			line++;
+			i = file;
+		}
+	}
+
+	long unsigned hpos = pos - i;
+
+	fprintf(stderr, "Error: %s\n", reason);
+	fprintf(stderr, "on %ld:%ld", line, hpos);
+	fflush(stderr);
+	for (; !*file || *file != '\n' || file < pos + 10; i++) {
+		write(STDERR_FILENO, file, 1);
+	}
+	fflush(stderr);
+	fprintf(stderr, "\n");
+	fflush(stderr);
+	exit(1);
+}
+
